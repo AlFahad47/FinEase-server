@@ -47,6 +47,24 @@ app.get("/", (req, res) => {
   res.send("Server is running");
 });
 
+async function run() {
+  try {
+    await client.connect();
+    const db = client.db("fin_db");
+    const transactionsCollection = db.collection("transactions");
+
+    app.post("/add-transaction", async (req, res) => {
+      const newTransaction = req.body;
+      console.log(newTransaction);
+      const result = await transactionsCollection.insertOne(newTransaction);
+      res.send(result);
+    });
+  } finally {
+  }
+}
+
+run().catch(console.dir);
+
 app.listen(port, () => {
   console.log(`Smart server is running on port: ${port}`);
 });
