@@ -81,6 +81,12 @@ async function run() {
       const result = await transactionsCollection.deleteOne(query);
       res.send(result);
     });
+    app.get("/transaction/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await transactionsCollection.findOne(query);
+      res.send(result);
+    });
   } finally {
   }
 }
