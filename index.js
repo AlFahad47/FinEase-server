@@ -59,6 +59,21 @@ async function run() {
       const result = await transactionsCollection.insertOne(newTransaction);
       res.send(result);
     });
+    app.get("/my-transactions", verifyFireBaseToken, async (req, res) => {
+      const email = req.query.email;
+      console.log(email, req.token_email);
+      const query = {};
+      if (email) {
+        query.email = email;
+        if (email !== req.token_email) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
+      }
+
+      const cursor = transactionsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
   } finally {
   }
 }
