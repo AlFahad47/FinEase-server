@@ -54,13 +54,19 @@ async function run() {
     const transactionsCollection = db.collection("transactions");
 
     app.post("/add-transaction", async (req, res) => {
-      const newTransaction = req.body;
+      const newTransaction = {
+        ...req.body,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       console.log(newTransaction);
       const result = await transactionsCollection.insertOne(newTransaction);
       res.send(result);
     });
     app.get("/my-transactions", verifyFireBaseToken, async (req, res) => {
-      const email = req.query.email;
+      // console.log(req.query);
+      const { sort = "createdAt", order = -1, email } = req.query;
+      // const email = req.query.email;
       console.log(email, req.token_email);
       const query = {};
       if (email) {
@@ -69,8 +75,13 @@ async function run() {
           return res.status(403).send({ message: "forbidden access" });
         }
       }
+      const sortField =
+        sort === "date" ? "date" : sort === "amount" ? "amount" : "createdAt";
+      const sortOrder = order === "1" ? 1 : -1;
 
-      const cursor = transactionsCollection.find(query);
+      const cursor = transactionsCollection
+        .find(query)
+        .sort({ [sortField]: sortOrder });
       const result = await cursor.toArray();
       res.send(result);
     });
