@@ -131,6 +131,31 @@ async function run() {
       const total = result.length > 0 ? result[0].total : 0;
       return res.json({ total });
     });
+
+    app.get("/reports-summary", async (req, res) => {
+      const email = req.query.email;
+      // console.log("email", email);
+      const category = await transactionsCollection
+        .aggregate([
+          { $match: { email } },
+          { $group: { _id: "$category", total: { $sum: "$amount" } } },
+        ])
+        .toArray();
+      const monthly = await transactionsCollection
+        .aggregate([
+          { $match: { email } },
+          {
+            $group: {
+              _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+              total: { $sum: "$amount" },
+            },
+          },
+          { $project: { month: "$_id", total: 1, _id: 0 } },
+          { $sort: { month: 1 } },
+        ])
+        .toArray();
+      res.status(200).json({ category, monthly });
+    });
   } finally {
   }
 }
