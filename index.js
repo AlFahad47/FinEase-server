@@ -54,8 +54,10 @@ async function run() {
     const transactionsCollection = db.collection("transactions");
 
     app.post("/add-transaction", async (req, res) => {
+      const { date, ...rest } = req.body;
       const newTransaction = {
-        ...req.body,
+        ...rest,
+        date: new Date(date),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -146,7 +148,7 @@ async function run() {
           { $match: { email } },
           {
             $group: {
-              _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+              _id: { $dateToString: { format: "%Y-%m", date: "$date" } },
               total: { $sum: "$amount" },
             },
           },
