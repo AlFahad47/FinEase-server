@@ -176,6 +176,29 @@ async function run() {
         .toArray();
       res.status(200).json({ category, monthly });
     });
+
+    app.get("/overviews", async (req, res) => {
+      const email = req.query.email;
+
+      const income = await transactionsCollection
+        .aggregate([
+          { $match: { email: email, type: "Income" } },
+          { $group: { _id: null, totalIncome: { $sum: "$amount" } } },
+        ])
+        .toArray();
+      const expense = await transactionsCollection
+        .aggregate([
+          { $match: { email: email, type: "Expense" } },
+          { $group: { _id: null, totalExpense: { $sum: "$amount" } } },
+        ])
+        .toArray();
+
+      const totalIncome = income[0]?.totalIncome || 0;
+      const totalExpense = expense[0]?.totalExpense || 0;
+      const balance = totalIncome - totalExpense;
+      console.log(totalExpense, totalIncome, balance);
+      res.status(200).json({ totalIncome, totalExpense, balance });
+    });
   } finally {
   }
 }
