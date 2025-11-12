@@ -148,11 +148,29 @@ async function run() {
           { $match: { email } },
           {
             $group: {
-              _id: { $dateToString: { format: "%Y-%m", date: "$date" } },
+              _id: {
+                month: { $dateToString: { format: "%Y-%m", date: "$date" } },
+                type: "$type",
+              },
               total: { $sum: "$amount" },
             },
           },
-          { $project: { month: "$_id", total: 1, _id: 0 } },
+          {
+            $group: {
+              _id: "$_id.month",
+              income: {
+                $sum: {
+                  $cond: [{ $eq: ["$_id.type", "Income"] }, "$total", 0],
+                },
+              },
+              expense: {
+                $sum: {
+                  $cond: [{ $eq: ["$_id.type", "Expense"] }, "$total", 0],
+                },
+              },
+            },
+          },
+          { $project: { month: "$_id", income: 1, expense: 1, _id: 0 } },
           { $sort: { month: 1 } },
         ])
         .toArray();
