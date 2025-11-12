@@ -98,6 +98,39 @@ async function run() {
       const result = await transactionsCollection.findOne(query);
       res.send(result);
     });
+
+    app.get("/total-transactions", verifyFireBaseToken, async (req, res) => {
+      const category = req.query.category;
+      const email = req.query.email;
+      const query = {};
+      if (email) {
+        query.email = email;
+        if (email !== req.token_email) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
+      }
+      console.log(email, category, "from total");
+
+      const result = await transactionsCollection
+        .aggregate([
+          {
+            $match: {
+              email,
+              category,
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: "$amount" },
+            },
+          },
+        ])
+        .toArray();
+
+      const total = result.length > 0 ? result[0].total : 0;
+      return res.json({ total });
+    });
   } finally {
   }
 }
