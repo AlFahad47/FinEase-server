@@ -7,7 +7,12 @@ const port = process.env.PORT || 3000;
 
 const admin = require("firebase-admin");
 
-const serviceAccount = require("./finease-admin-key.json");
+// index.js
+const decoded = Buffer.from(
+  process.env.FIREBASE_SERVICE_KEY,
+  "base64"
+).toString("utf8");
+const serviceAccount = JSON.parse(decoded);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -49,7 +54,7 @@ app.get("/", (req, res) => {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     const db = client.db("fin_db");
     const transactionsCollection = db.collection("transactions");
 
@@ -179,7 +184,7 @@ async function run() {
 
     app.get("/overviews", async (req, res) => {
       const email = req.query.email;
-
+      console.log(email);
       const income = await transactionsCollection
         .aggregate([
           { $match: { email: email, type: "Income" } },
