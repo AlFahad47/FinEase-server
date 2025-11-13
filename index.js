@@ -199,6 +199,52 @@ async function run() {
       console.log(totalExpense, totalIncome, balance);
       res.status(200).json({ totalIncome, totalExpense, balance });
     });
+
+    app.patch(
+      "/transaction/update/:id",
+      verifyFireBaseToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const email = req.query.email;
+
+        const { date, ...rest } = req.body;
+
+        const updateData = {
+          ...rest,
+          date: new Date(date),
+          updatedAt: new Date(),
+        };
+
+        delete updateData.email;
+        delete updateData.name;
+        delete updateData.createdAt;
+
+        const query = {};
+        if (email) {
+          query.email = email;
+          if (email !== req.token_email) {
+            return res.status(403).send({ message: "forbidden access" });
+          }
+        }
+
+        console.log(email, id, "from patch");
+
+        try {
+          const result = await transactionsCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: updateData }
+          );
+
+          if (result.matchedCount === 0) {
+            return res.status(404).send({ message: "Wrong Transaction Id" });
+          }
+          res.send(result);
+        } catch (error) {
+          console.error(error);
+          res.status(500).send({ message: "Failed to update" });
+        }
+      }
+    );
   } finally {
   }
 }
